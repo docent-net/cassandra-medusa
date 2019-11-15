@@ -215,7 +215,7 @@ def report_last_backup(medusa_config, push_metrics):
 @pass_MedusaConfig
 def get_last_complete_cluster_backup(medusa_config):
     """
-    Pints the name of the latest complete cluster backup
+    Prints the name of the latest complete cluster backup
     """
     backup = medusa.report_latest.get_latest_complete_cluster_backup(medusa_config)
     print(backup.name)

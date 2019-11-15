@@ -116,7 +116,7 @@ Commands:
   download                        Download backup
   fetch-tokenmap                  Backup Cassandra
   get-last-complete-cluster-backup
-                                  Pints the name of the latest complete
+                                  Prints the name of the latest complete
                                   cluster...
   list-backups                    List backups
   purge                           Delete obsolete backups
