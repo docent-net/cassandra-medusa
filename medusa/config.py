@@ -25,7 +25,7 @@ import medusa.cassandra_utils
 
 StorageConfig = collections.namedtuple(
     'StorageConfig',
-    ['bucket_name', 'key_file', 'prefix', 'fqdn', 'host_file_separator', 'storage_provider', 'api_key_or_username',
+    ['bucket_name', 'key_file', 'aws_instance_profile', 'prefix', 'fqdn', 'host_file_separator', 'storage_provider', 'api_key_or_username',
      'api_secret_or_password', 'base_path', 'max_backup_age', 'max_backup_count', 'api_profile']
 )
 
