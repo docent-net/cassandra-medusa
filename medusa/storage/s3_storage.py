@@ -15,7 +15,9 @@
 import configparser
 import logging
 import os
+import sys
 import io
+import requests
 from dateutil import parser
 
 from libcloud.storage.providers import get_driver
@@ -65,8 +67,27 @@ class S3Storage(AbstractStorage):
             # access token for credentials fetched from STS service:
             if 'AWS_SECURITY_TOKEN' in os.environ:
                 aws_security_token = os.environ['AWS_SECURITY_TOKEN']
+        # or maybe user wants to authenticate via instance profile permissions
+        elif self.config.aws_instance_profile:
+            logging.debug("Reading AWS credentials from instance-profile: {}".format(
+                self.config.aws_instance_profile
+            ))
+            url = 'http://169.254.169.254/latest/meta-data/iam/security-credentials/{}'.format(
+                self.config.aws_instance_profile
+            )
+
+            try:
+                auth_data = requests.get(url).json()
+            except requests.exceptions.RequestException as e:
+                logging.error('Can\'t fetch AWS instance-profile credentials!')
+                sys.exit(1)
+
+            aws_access_key_id = auth_data['AccessKeyId']
+            aws_secret_access_key = auth_data['SecretAccessKey']
+            aws_security_token = auth_data['Token']
+
         # otherwise let's use AWS credentials file
-        elif os.path.exists(self.config.key_file):
+        elif self.config.key_file and os.path.exists(self.config.key_file):
             logging.debug("Reading AWS credentials from {}".format(
                 self.config.key_file
             ))
