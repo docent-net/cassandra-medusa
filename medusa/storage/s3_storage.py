@@ -47,14 +47,40 @@ class S3Storage(AbstractStorage):
     S3_RGW_OUTSCALE = 's3_rgw_outscale'
     """
     def connect_storage(self):
-        aws_config = configparser.ConfigParser(interpolation=None)
-        with io.open(os.path.expanduser(self.config.key_file), 'r', encoding='utf-8') as aws_file:
-            aws_config.read_file(aws_file)
-            aws_profile = self.config.api_profile
-            profile = aws_config[aws_profile]
-            cls = get_driver(self.config.storage_provider)
-            driver = cls(profile['aws_access_key_id'], profile['aws_secret_access_key'])
-            return driver
+        """
+        Connects to AWS S3 storage using EC2 driver
+
+        :return driver: EC2 driver object
+        """
+
+        aws_security_token = ''
+
+        # if there're env variables with credentials - let's use those
+        if 'AWS_ACCESS_KEY_ID' in os.environ and \
+                'AWS_SECRET_ACCESS_KEY' in os.environ:
+            aws_access_key_id = os.environ['AWS_ACCESS_KEY_ID']
+            aws_secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
+
+            # access token for credentials fetched from STS service:
+            if os.environ['AWS_SECURITY_TOKEN']:
+                aws_security_token = os.environ['AWS_SECURITY_TOKEN']
+        elif os.path.exists(self.config.key_file):
+            aws_config = configparser.ConfigParser(interpolation=None)
+            with io.open(os.path.expanduser(self.config.key_file), 'r', encoding='utf-8') as aws_file:
+                aws_config.read_file(aws_file)
+                aws_profile = self.config.api_profile
+                profile = aws_config[aws_profile]
+                aws_access_key_id = profile['aws_access_key_id']
+                aws_secret_access_key = profile['aws_secret_access_key']
+        else:
+            raise NotImplementedError("No valid method of AWS authentication provided.")
+
+        cls = get_driver(self.config.storage_provider)
+        print("{} {} {}".format(aws_access_key_id, aws_secret_access_key, aws_security_token))
+        driver = cls(
+            aws_access_key_id, aws_secret_access_key, aws_security_token
+        )
+        return driver
 
     def download_blobs(self, src, dest):
         """
